@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarketPulse AI — Briefing Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F7F3E9;
+    --ink: #1C3D3A;
+    --gain: #2F6844;
+    --loss: #8C2F39;
+    --neutral: #B8860B;
+    --rule: #C9BFA0;
+    --rule-light: #E4DCC5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    line-height: 1.5;
+  }
+  header {
+    padding: 48px 24px 32px;
+    max-width: 900px;
+    margin: 0 auto;
+    border-bottom: 2px solid var(--ink);
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin: 0 0 8px;
+  }
+  .subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--ink);
+    opacity: 0.7;
+  }
+  .stats {
+    margin-top: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .controls {
+    max-width: 900px;
+    margin: 24px auto;
+    padding: 0 24px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .controls input, .controls select {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.95rem;
+    padding: 10px 14px;
+    border: 1.5px solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 2px;
+  }
+  .controls input { flex: 1; min-width: 200px; }
+  main { max-width: 900px; margin: 0 auto; padding: 0 24px 80px; }
+  .entry {
+    border-bottom: 1px dashed var(--rule);
+    padding: 32px 0;
+  }
+  .entry:last-child { border-bottom: none; }
+  .entry-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .entry-no {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.3rem;
+  }
+  .entry-time {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    opacity: 0.75;
+  }
+  .degraded-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    background: var(--neutral);
+    color: var(--paper);
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+  .entry-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 700px) {
+    .entry-body { grid-template-columns: 1fr; }
+  }
+  .col-title {
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.75rem;
+    opacity: 0.6;
+    margin: 0 0 16px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--rule-light);
+  }
+  .item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stamp {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    font-size: 0.75rem;
+    transform: rotate(-8deg);
+  }
+  .stamp-gain { color: var(--gain); }
+  .stamp-loss { color: var(--loss); }
+  .stamp-neutral { color: var(--neutral); }
+  .item-top { display: flex; flex-direction: column; gap: 2px; }
+  .sector-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    opacity: 0.65;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .headline { margin: 0; font-size: 1rem; font-weight: 500; line-height: 1.35; }
+  .summary { font-size: 0.9rem; opacity: 0.85; margin: 6px 0; }
+  .stocks { font-size: 0.82rem; margin: 4px 0; }
+  .stocks .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    opacity: 0.6;
+    text-transform: uppercase;
+    margin-right: 6px;
+  }
+  .link {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink);
+  }
+  .empty-col { font-size: 0.85rem; opacity: 0.5; font-style: italic; }
+  footer {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>MarketPulse AI</h1>
+  <div class="subtitle">Briefing Ledger — every automated run, archived and searchable</div>
+  <div class="stats">
+    <span>2 entries logged</span>
+    <span>07 Jul 2026, 08:26 PM UTC → 07 Jul 2026, 08:40 PM UTC</span>
+  </div>
+</header>
+
+<div class="controls">
+  <input type="text" id="searchBox" placeholder="Search headlines &amp; summaries...">
+  <select id="sectorFilter">
+    <option value="">All sectors</option>
+    <option value="Banking">Banking</option>
+    <option value="Energy">Energy</option>
+    <option value="FMCG">FMCG</option>
+    <option value="General">General</option>
+    <option value="IT">IT</option>
+    <option value="PSU">PSU</option>
+  </select>
+</div>
+
+<main id="ledger">
+  
+      <section class="entry" data-entry>
+        <div class="entry-head">
+          <span class="entry-no">Entry 2</span>
+          <span class="entry-time">07 Jul 2026, 08:40 PM UTC &middot; Morning Briefing</span>
+          
+        </div>
+        <div class="entry-body">
+          <div class="col">
+            <h3 class="col-title">India</h3>
+            
+        <article class="item" data-sector="General" data-text="sebi eases rules on use of depository investor protection fund income the securities and exchange board of india (sebi) has relaxed regulations on how the income generated from the investor protection fund by depositories can be utilized. this could lead to more resources being available for investor protection and education initiatives.">
+          <span class="stamp stamp-neutral">N</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">General</span>
+              <h4 class="headline">Sebi eases rules on use of depository investor protection fund income</h4>
+            </div>
+            <p class="summary">The Securities and Exchange Board of India (Sebi) has relaxed regulations on how the income generated from the investor protection fund by depositories can be utilized. This could lead to more resources being available for investor protection and education initiatives.</p>
+            <p class="stocks"><span class="label">Stocks</span> Reliance Industries, HDFC Bank, TCS, ICICI Bank, Infosys</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/stocks/news/sebi-eases-rules-on-use-of-depository-investor-protection-fund-income/articleshow/132242860.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="Banking" data-text="rbi to conduct rs 25,000-cr overnight variable rate repo auction on jul 8 the reserve bank of india (rbi) will conduct an overnight variable rate repo auction to manage liquidity in the banking system. this action can influence short-term interest rates and indicate the rbi&#x27;s stance on liquidity conditions.">
+          <span class="stamp stamp-neutral">N</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">Banking</span>
+              <h4 class="headline">RBI to conduct Rs 25,000-cr overnight variable rate repo auction on Jul 8</h4>
+            </div>
+            <p class="summary">The Reserve Bank of India (RBI) will conduct an overnight variable rate repo auction to manage liquidity in the banking system. This action can influence short-term interest rates and indicate the RBI&#x27;s stance on liquidity conditions.</p>
+            <p class="stocks"><span class="label">Stocks</span> HDFC Bank, ICICI Bank, State Bank of India, Kotak Mahindra Bank, Axis Bank</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/forex/forex-news/rbi-to-conduct-rs-25000-cr-overnight-variable-rate-repo-auction-on-jul-8/articleshow/132241975.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="FMCG" data-text="kalyan jewellers posts strong q1 growth on robust demand kalyan jewellers reported strong first-quarter growth driven by robust consumer demand for jewellery. this positive performance suggests healthy discretionary spending and bodes well for the retail and jewellery sectors.">
+          <span class="stamp stamp-gain">G</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">FMCG</span>
+              <h4 class="headline">Kalyan Jewellers posts strong Q1 growth on robust demand</h4>
+            </div>
+            <p class="summary">Kalyan Jewellers reported strong first-quarter growth driven by robust consumer demand for jewellery. This positive performance suggests healthy discretionary spending and bodes well for the retail and jewellery sectors.</p>
+            <p class="stocks"><span class="label">Stocks</span> Hindustan Unilever, ITC, Nestle India, Britannia Industries, Dabur India</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/stocks/news/kalyan-jewellers-posts-strong-q1-growth-on-robust-demand/articleshow/132241944.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="General" data-text="ncdex revives black pepper futures to boost india&#x27;s price discovery the national commodity and derivatives exchange (ncdex) is relaunching black pepper futures contracts to improve price discovery in the indian market. this move aims to provide better hedging tools and price transparency for stakeholders in the agricultural commodity sector.">
+          <span class="stamp stamp-neutral">N</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">General</span>
+              <h4 class="headline">NCDEX revives black pepper futures to boost India&#x27;s price discovery</h4>
+            </div>
+            <p class="summary">The National Commodity and Derivatives Exchange (NCDEX) is relaunching black pepper futures contracts to improve price discovery in the Indian market. This move aims to provide better hedging tools and price transparency for stakeholders in the agricultural commodity sector.</p>
+            <p class="stocks"><span class="label">Stocks</span> Reliance Industries, HDFC Bank, TCS, ICICI Bank, Infosys</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/commodities/news/ncdex-revives-black-pepper-futures-to-boost-indias-price-discovery/articleshow/132240949.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="PSU" data-text="cochin shipyard ofs subscribed 3.52 times on day 1; retail investors get to bid tomorrow the offer for sale (ofs) in cochin shipyard saw strong subscription on the first day, indicating significant investor interest. the government&#x27;s stake sale is progressing well, with retail investors getting their chance to participate.">
+          <span class="stamp stamp-gain">G</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">PSU</span>
+              <h4 class="headline">Cochin Shipyard OFS subscribed 3.52 times on Day 1; retail investors get to bid tomorrow</h4>
+            </div>
+            <p class="summary">The Offer for Sale (OFS) in Cochin Shipyard saw strong subscription on the first day, indicating significant investor interest. The government&#x27;s stake sale is progressing well, with retail investors getting their chance to participate.</p>
+            <p class="stocks"><span class="label">Stocks</span> State Bank of India, NTPC, Coal India, ONGC, Power Grid Corp</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/stocks/news/cochin-shipyard-ofs-subscribed-3-52-times-on-day-1-retail-investors-get-to-bid-tomorrow/articleshow/132240890.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+          </div>
+          <div class="col">
+            <h3 class="col-title">Global</h3>
+            
+        <article class="item" data-sector="IT" data-text="us stocks today: s&amp;amp;p 500, nasdaq end lower as ai worries hit chipmakers us stock markets, including the s&amp;p 500 and nasdaq, closed lower due to concerns surrounding ai technology&#x27;s impact on chipmakers. this sell-off in the global technology sector could affect indian it and semiconductor-related stocks.">
+          <span class="stamp stamp-loss">L</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">IT</span>
+              <h4 class="headline">US stocks today: S&amp;amp;P 500, Nasdaq end lower as AI worries hit chipmakers</h4>
+            </div>
+            <p class="summary">US stock markets, including the S&amp;P 500 and Nasdaq, closed lower due to concerns surrounding AI technology&#x27;s impact on chipmakers. This sell-off in the global technology sector could affect Indian IT and semiconductor-related stocks.</p>
+            <p class="stocks"><span class="label">Stocks</span> TCS, Infosys, HCL Technologies, Wipro, Tech Mahindra</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/us-stocks/news/us-stocks-today-sp-500-ends-down-as-ai-worries-hit-chipmakers/articleshow/132242860.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="IT" data-text="sandisk shares crash 10% as ai chip selloff spreads to memory stocks sandisk shares experienced a significant drop due to a sell-off in ai chip stocks, impacting memory stocks. this trend in the global semiconductor market could negatively influence indian companies involved in memory and related technologies.">
+          <span class="stamp stamp-loss">L</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">IT</span>
+              <h4 class="headline">SanDisk shares crash 10% as AI chip selloff spreads to memory stocks</h4>
+            </div>
+            <p class="summary">SanDisk shares experienced a significant drop due to a sell-off in AI chip stocks, impacting memory stocks. This trend in the global semiconductor market could negatively influence Indian companies involved in memory and related technologies.</p>
+            <p class="stocks"><span class="label">Stocks</span> TCS, Infosys, HCL Technologies, Wipro, Tech Mahindra</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/us-stocks/news/sandisk-shares-crash-10-as-ai-chip-selloff-spreads-to-memory-stocks/articleshow/132242786.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="IT" data-text="micron, intel shares crash up to 8% as samsung fails to calm concerns over ai shares of micron and intel fell sharply as investor concerns over ai&#x27;s impact on the chip industry persisted, despite samsung&#x27;s reassurances. this global downturn in the semiconductor sector may impact indian technology firms and their supply chains.">
+          <span class="stamp stamp-loss">L</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">IT</span>
+              <h4 class="headline">Micron, Intel shares crash up to 8% as Samsung fails to calm concerns over AI</h4>
+            </div>
+            <p class="summary">Shares of Micron and Intel fell sharply as investor concerns over AI&#x27;s impact on the chip industry persisted, despite Samsung&#x27;s reassurances. This global downturn in the semiconductor sector may impact Indian technology firms and their supply chains.</p>
+            <p class="stocks"><span class="label">Stocks</span> TCS, Infosys, HCL Technologies, Wipro, Tech Mahindra</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/us-stocks/news/micron-intel-shares-crash-up-to-8-as-samsung-fails-to-calm-concerns-over-ai/articleshow/132241619.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="Energy" data-text="global oil market weathers iran war shock, but reserve depletion raises future price risks the global oil market has absorbed the shock of potential iran-related conflicts, but concerns are rising about depleting reserves, which could lead to future price volatility. higher crude oil prices can impact india&#x27;s trade balance and inflation.">
+          <span class="stamp stamp-loss">L</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">Energy</span>
+              <h4 class="headline">Global oil market weathers Iran war shock, but reserve depletion raises future price risks</h4>
+            </div>
+            <p class="summary">The global oil market has absorbed the shock of potential Iran-related conflicts, but concerns are rising about depleting reserves, which could lead to future price volatility. Higher crude oil prices can impact India&#x27;s trade balance and inflation.</p>
+            <p class="stocks"><span class="label">Stocks</span> Reliance Industries, ONGC, NTPC, Power Grid Corp, BPCL</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/us-stocks/news/global-oil-market-weathers-iran-war-shock-but-reserve-depletion-raises-future-price-risks/articleshow/132233831.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="Energy" data-text="global market: asian refiners turn to cheaper gulf oil despite saudi price cuts asian refiners are opting for oil from the gulf region over saudi supplies, even with saudi price reductions, indicating a shift in sourcing strategies possibly due to price or availability. this trend can influence global oil prices and supply dynamics, which directly affect india&#x27;s energy imports.">
+          <span class="stamp stamp-neutral">N</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">Energy</span>
+              <h4 class="headline">Global Market: Asian refiners turn to cheaper Gulf oil despite Saudi price cuts</h4>
+            </div>
+            <p class="summary">Asian refiners are opting for oil from the Gulf region over Saudi supplies, even with Saudi price reductions, indicating a shift in sourcing strategies possibly due to price or availability. This trend can influence global oil prices and supply dynamics, which directly affect India&#x27;s energy imports.</p>
+            <p class="stocks"><span class="label">Stocks</span> Reliance Industries, ONGC, NTPC, Power Grid Corp, BPCL</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/us-stocks/news/global-market-asian-refiners-turn-to-cheaper-gulf-oil-despite-saudi-price-cuts/articleshow/132234383.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="entry" data-entry>
+        <div class="entry-head">
+          <span class="entry-no">Entry 1</span>
+          <span class="entry-time">07 Jul 2026, 08:26 PM UTC &middot; Morning Briefing</span>
+          
+        </div>
+        <div class="entry-body">
+          <div class="col">
+            <h3 class="col-title">India</h3>
+            
+        <article class="item" data-sector="IT" data-text="tcs, infosys and other indian it stocks rise up to 4% after ai worries trigger kospi selloff indian it companies are seeing gains as global concerns about ai chip demand lead to sell-offs in other markets, potentially diverting investment towards established it services.">
+          <span class="stamp stamp-gain">G</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">IT</span>
+              <h4 class="headline">TCS, Infosys and other Indian IT stocks rise up to 4% after AI worries trigger Kospi selloff</h4>
+            </div>
+            <p class="summary">Indian IT companies are seeing gains as global concerns about AI chip demand lead to sell-offs in other markets, potentially diverting investment towards established IT services.</p>
+            <p class="stocks"><span class="label">Stocks</span> TCS, Infosys, HCL Technologies, Wipro, Tech Mahindra</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/stocks/news/tcs-infosys-and-other-indian-it-stocks-rise-up-to-4-after-ai-worries-trigger-kospi-selloff/articleshow/132235253.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="Banking" data-text="rbi to conduct rs 25,000-cr overnight variable rate repo auction on jul 8 the rbi&#x27;s liquidity management operation indicates it is providing funds to the banking system, which can support short-term credit availability and market stability.">
+          <span class="stamp stamp-neutral">N</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">Banking</span>
+              <h4 class="headline">RBI to conduct Rs 25,000-cr overnight variable rate repo auction on Jul 8</h4>
+            </div>
+            <p class="summary">The RBI&#x27;s liquidity management operation indicates it is providing funds to the banking system, which can support short-term credit availability and market stability.</p>
+            <p class="stocks"><span class="label">Stocks</span> HDFC Bank, ICICI Bank, State Bank of India, Kotak Mahindra Bank, Axis Bank</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/forex/forex-news/rbi-to-conduct-rs-25000-cr-overnight-variable-rate-repo-auction-on-jul-8/articleshow/132241975.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="PSU" data-text="cochin shipyard ofs subscribed 3.52 times on day 1; retail investors get to bid tomorrow strong investor interest in cochin shipyard&#x27;s offer for sale (ofs) suggests positive sentiment towards psu disinvestments and the company&#x27;s growth prospects.">
+          <span class="stamp stamp-gain">G</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">PSU</span>
+              <h4 class="headline">Cochin Shipyard OFS subscribed 3.52 times on Day 1; retail investors get to bid tomorrow</h4>
+            </div>
+            <p class="summary">Strong investor interest in Cochin Shipyard&#x27;s Offer for Sale (OFS) suggests positive sentiment towards PSU disinvestments and the company&#x27;s growth prospects.</p>
+            <p class="stocks"><span class="label">Stocks</span> State Bank of India, NTPC, Coal India, ONGC, Power Grid Corp</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/stocks/news/cochin-shipyard-ofs-subscribed-3-52-times-on-day-1-retail-investors-get-to-bid-tomorrow/articleshow/132240890.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="FMCG" data-text="kalyan jewellers posts strong q1 growth on robust demand kalyan jewellers&#x27; strong q1 performance highlights healthy consumer demand, which is a positive indicator for the retail and consumer discretionary sectors.">
+          <span class="stamp stamp-gain">G</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">FMCG</span>
+              <h4 class="headline">Kalyan Jewellers posts strong Q1 growth on robust demand</h4>
+            </div>
+            <p class="summary">Kalyan Jewellers&#x27; strong Q1 performance highlights healthy consumer demand, which is a positive indicator for the retail and consumer discretionary sectors.</p>
+            <p class="stocks"><span class="label">Stocks</span> Hindustan Unilever, ITC, Nestle India, Britannia Industries, Dabur India</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/stocks/news/kalyan-jewellers-posts-strong-q1-growth-on-robust-demand/articleshow/132241944.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="Banking" data-text="india bonds slip as profit booking, higher us yields weigh a decline in indian bonds, influenced by profit-taking and rising us yields, could signal potential pressure on fixed-income investments and reflect broader market sentiment.">
+          <span class="stamp stamp-loss">L</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">Banking</span>
+              <h4 class="headline">India bonds slip as profit booking, higher US yields weigh</h4>
+            </div>
+            <p class="summary">A decline in Indian bonds, influenced by profit-taking and rising US yields, could signal potential pressure on fixed-income investments and reflect broader market sentiment.</p>
+            <p class="stocks"><span class="label">Stocks</span> HDFC Bank, ICICI Bank, State Bank of India, Kotak Mahindra Bank, Axis Bank</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/bonds/india-bonds-slip-as-profit-booking-higher-us-yields-weigh/articleshow/132238874.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+          </div>
+          <div class="col">
+            <h3 class="col-title">Global</h3>
+            
+        <article class="item" data-sector="IT" data-text="us stocks today: s&amp;amp;p 500 ends down as ai worries hit chipmakers concerns over ai demand and valuations are impacting major us indices and semiconductor stocks, which could have ripple effects on global tech supply chains and investment sentiment.">
+          <span class="stamp stamp-loss">L</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">IT</span>
+              <h4 class="headline">US stocks today: S&amp;amp;P 500 ends down as AI worries hit chipmakers</h4>
+            </div>
+            <p class="summary">Concerns over AI demand and valuations are impacting major US indices and semiconductor stocks, which could have ripple effects on global tech supply chains and investment sentiment.</p>
+            <p class="stocks"><span class="label">Stocks</span> TCS, Infosys, HCL Technologies, Wipro, Tech Mahindra</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/us-stocks/news/us-stocks-today-sp-500-ends-down-as-ai-worries-hit-chipmakers/articleshow/132242860.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="Energy" data-text="global oil market weathers iran war shock, but reserve depletion raises future price risks despite current stability, the depletion of oil reserves due to geopolitical events poses a risk of future price volatility, impacting energy costs for businesses and consumers globally.">
+          <span class="stamp stamp-neutral">N</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">Energy</span>
+              <h4 class="headline">Global oil market weathers Iran war shock, but reserve depletion raises future price risks</h4>
+            </div>
+            <p class="summary">Despite current stability, the depletion of oil reserves due to geopolitical events poses a risk of future price volatility, impacting energy costs for businesses and consumers globally.</p>
+            <p class="stocks"><span class="label">Stocks</span> Reliance Industries, ONGC, NTPC, Power Grid Corp, BPCL</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/us-stocks/news/global-oil-market-weathers-iran-war-shock-but-reserve-depletion-raises-future-price-risks/articleshow/132233831.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="IT" data-text="micron, intel shares crash up to 8% as samsung fails to calm concerns over ai significant drops in major chip manufacturer stocks like micron and intel, amid broader ai-related selloffs, indicate investor nervousness about the future demand and profitability in the semiconductor sector.">
+          <span class="stamp stamp-loss">L</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">IT</span>
+              <h4 class="headline">Micron, Intel shares crash up to 8% as Samsung fails to calm concerns over AI</h4>
+            </div>
+            <p class="summary">Significant drops in major chip manufacturer stocks like Micron and Intel, amid broader AI-related selloffs, indicate investor nervousness about the future demand and profitability in the semiconductor sector.</p>
+            <p class="stocks"><span class="label">Stocks</span> TCS, Infosys, HCL Technologies, Wipro, Tech Mahindra</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/us-stocks/news/micron-intel-shares-crash-up-to-8-as-samsung-fails-to-calm-concerns-over-ai/articleshow/132241619.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="General" data-text="global market: euro zone inflation risks persist despite oil price retreat, ecb&#x27;s schnabel warns persistent inflation risks in the eurozone, even with falling oil prices, suggest potential for continued interest rate hikes or a prolonged period of higher inflation, impacting global economic outlook.">
+          <span class="stamp stamp-loss">L</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">General</span>
+              <h4 class="headline">Global Market: Euro zone inflation risks persist despite oil price retreat, ECB&#x27;s Schnabel warns</h4>
+            </div>
+            <p class="summary">Persistent inflation risks in the Eurozone, even with falling oil prices, suggest potential for continued interest rate hikes or a prolonged period of higher inflation, impacting global economic outlook.</p>
+            <p class="stocks"><span class="label">Stocks</span> Reliance Industries, HDFC Bank, TCS, ICICI Bank, Infosys</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/us-stocks/news/global-market-euro-zone-inflation-risks-persist-despite-oil-price-retreat-ecbs-schnabel-warns/articleshow/132231999.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+
+        <article class="item" data-sector="Energy" data-text="global market: asian refiners turn to cheaper gulf oil despite saudi price cuts asian refiners opting for cheaper oil sources suggests a shift in global supply dynamics and potentially lower margins for higher-priced crude suppliers, impacting the energy market.">
+          <span class="stamp stamp-neutral">N</span>
+          <div class="item-body">
+            <div class="item-top">
+              <span class="sector-tag">Energy</span>
+              <h4 class="headline">Global Market: Asian refiners turn to cheaper Gulf oil despite Saudi price cuts</h4>
+            </div>
+            <p class="summary">Asian refiners opting for cheaper oil sources suggests a shift in global supply dynamics and potentially lower margins for higher-priced crude suppliers, impacting the energy market.</p>
+            <p class="stocks"><span class="label">Stocks</span> Reliance Industries, ONGC, NTPC, Power Grid Corp, BPCL</p>
+            <a class="link" href="https://economictimes.indiatimes.com/markets/us-stocks/news/global-market-asian-refiners-turn-to-cheaper-gulf-oil-despite-saudi-price-cuts/articleshow/132234383.cms" target="_blank" rel="noopener">Read source →</a>
+          </div>
+        </article>
+          </div>
+        </div>
+      </section>
+</main>
+
+<footer>Generated 07 Jul 2026, 08:40 PM UTC &middot; MarketPulse AI</footer>
+
+<script>
+  const searchBox = document.getElementById('searchBox');
+  const sectorFilter = document.getElementById('sectorFilter');
+  const items = Array.from(document.querySelectorAll('.item'));
+  const entries = Array.from(document.querySelectorAll('.entry'));
+
+  function applyFilter() {
+    const keyword = searchBox.value.trim().toLowerCase();
+    const sector = sectorFilter.value;
+
+    items.forEach(item => {
+      const matchesKeyword = !keyword || item.dataset.text.includes(keyword);
+      const matchesSector = !sector || item.dataset.sector === sector;
+      item.style.display = (matchesKeyword && matchesSector) ? '' : 'none';
+    });
+
+    entries.forEach(entry => {
+      const visibleItems = entry.querySelectorAll('.item:not([style*="display: none"])');
+      entry.style.display = visibleItems.length > 0 ? '' : 'none';
+    });
+  }
+
+  searchBox.addEventListener('input', applyFilter);
+  sectorFilter.addEventListener('change', applyFilter);
+</script>
+
+</body>
+</html>

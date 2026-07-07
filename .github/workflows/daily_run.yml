@@ -6,6 +6,9 @@ on:
     - cron: '20 15 * * *'  # 8:50 PM IST (3:20 PM UTC) -- evening wrap-up
   workflow_dispatch:        # lets you manually trigger a run from the GitHub UI, for testing
 
+permissions:
+  contents: write  # needed so the workflow can commit the updated archive database back to the repo
+
 jobs:
   run-marketpulse:
     runs-on: ubuntu-latest
@@ -34,9 +37,18 @@ jobs:
           cd src
           python main.py
 
-      # Uploads data/*.json and any failure logs as a downloadable artifact
-      # on this run's summary page -- "if: always()" means this happens
-      # even if the step above failed, so you can inspect what went wrong.
+      # Persist the growing archive database back into the repo. GitHub
+      # Actions runners are thrown away after each job -- without this
+      # step, briefings.db would reset to empty on every single run.
+      - name: Commit updated archive to repo
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/briefings.db docs/index.html
+          git diff --staged --quiet || git commit -m "Archive + dashboard update [skip ci]"
+          git push
+
       - name: Upload run artifacts
         if: always()
         uses: actions/upload-artifact@v4

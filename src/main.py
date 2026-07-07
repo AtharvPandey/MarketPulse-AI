@@ -25,6 +25,7 @@ import ai_analyzer
 import sector_stock_mapper
 import message_sender
 import archive
+import dashboard_generator
 
 load_dotenv()
 
@@ -70,6 +71,9 @@ def main():
 
         print("\n===== PHASE 7: Archive =====")
         archive.main()
+
+        print("\n===== PHASE 8: Dashboard Generator =====")
+        dashboard_generator.main()
 
         print("\n✅ Full pipeline completed successfully.")
 
