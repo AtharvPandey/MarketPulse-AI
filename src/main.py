@@ -24,6 +24,7 @@ import news_collector
 import ai_analyzer
 import sector_stock_mapper
 import message_sender
+import archive
 
 load_dotenv()
 
@@ -66,6 +67,9 @@ def main():
 
         print("\n===== PHASE 4: Message Sender =====")
         message_sender.main()
+
+        print("\n===== PHASE 7: Archive =====")
+        archive.main()
 
         print("\n✅ Full pipeline completed successfully.")
 
