@@ -1,0 +1,17 @@
+{
+  "Banking": ["HDFC Bank", "ICICI Bank", "State Bank of India", "Kotak Mahindra Bank", "Axis Bank"],
+  "IT": ["TCS", "Infosys", "HCL Technologies", "Wipro", "Tech Mahindra"],
+  "Auto": ["Maruti Suzuki", "Tata Motors", "Mahindra & Mahindra", "Bajaj Auto", "Eicher Motors"],
+  "Pharma": ["Sun Pharma", "Dr Reddy's Labs", "Cipla", "Divi's Laboratories", "Lupin"],
+  "FMCG": ["Hindustan Unilever", "ITC", "Nestle India", "Britannia Industries", "Dabur India"],
+  "Energy": ["Reliance Industries", "ONGC", "NTPC", "Power Grid Corp", "BPCL"],
+  "Metals": ["Tata Steel", "JSW Steel", "Hindalco Industries", "Vedanta", "SAIL"],
+  "Real Estate": ["DLF", "Godrej Properties", "Oberoi Realty", "Prestige Estates", "Macrotech Developers"],
+  "Infrastructure": ["Larsen & Toubro", "Adani Ports", "GMR Airports", "IRB Infrastructure", "NCC Ltd"],
+  "Telecom": ["Bharti Airtel", "Reliance Jio (RIL)", "Vodafone Idea", "Indus Towers", "Tata Communications"],
+  "Chemicals": ["Pidilite Industries", "SRF Ltd", "Deepak Nitrite", "UPL Ltd", "Aarti Industries"],
+  "PSU": ["State Bank of India", "NTPC", "Coal India", "ONGC", "Power Grid Corp"],
+  "Electronics": ["Dixon Technologies", "Amber Enterprises", "Havells India", "Voltas", "Kaynes Technology"],
+  "Aviation": ["Interglobe Aviation (IndiGo)", "SpiceJet", "GMR Airports"],
+  "General": ["Reliance Industries", "HDFC Bank", "TCS", "ICICI Bank", "Infosys"]
+}

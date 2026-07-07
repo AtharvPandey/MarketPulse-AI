@@ -1,0 +1,16 @@
+# Secrets -- never commit these
+.env
+
+# Python environment
+venv/
+__pycache__/
+*.pyc
+
+# Generated data (regenerated on each run -- not the static config files)
+data/raw_news.json
+data/analyzed_news.json
+data/final_briefing.json
+logs/*.log
+
+# macOS junk
+.DS_Store

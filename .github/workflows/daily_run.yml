@@ -1,0 +1,49 @@
+name: MarketPulse AI Daily Run
+
+on:
+  schedule:
+    - cron: '20 3 * * *'   # 8:50 AM IST (3:20 AM UTC) -- morning briefing
+    - cron: '20 15 * * *'  # 8:50 PM IST (3:20 PM UTC) -- evening wrap-up
+  workflow_dispatch:        # lets you manually trigger a run from the GitHub UI, for testing
+
+jobs:
+  run-marketpulse:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run full pipeline
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
+          TWILIO_WHATSAPP_TO: ${{ secrets.TWILIO_WHATSAPP_TO }}
+        run: |
+          cd src
+          python main.py
+
+      # Uploads data/*.json and any failure logs as a downloadable artifact
+      # on this run's summary page -- "if: always()" means this happens
+      # even if the step above failed, so you can inspect what went wrong.
+      - name: Upload run artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: marketpulse-run-${{ github.run_number }}
+          path: |
+            data/*.json
+            logs/*.log
+          retention-days: 7
+          if-no-files-found: ignore
