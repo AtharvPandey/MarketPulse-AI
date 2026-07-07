@@ -13,6 +13,7 @@ whole project modular: if a feed URL breaks, you only touch this file.
 
 import feedparser
 import json
+import html
 from datetime import datetime, timedelta, timezone
 
 # ---------------------------------------------------------------------------
@@ -97,7 +98,7 @@ def fetch_feed(source_name, url):
 
             collected.append({
                 "source": source_name,
-                "title": entry.get("title", "").strip(),
+                "title": html.unescape(entry.get("title", "")).strip(),
                 "link": entry.get("link", "").strip(),
                 "published": (
                     datetime(*published_struct[:6], tzinfo=timezone.utc).isoformat()

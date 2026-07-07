@@ -70,8 +70,14 @@ def format_timestamp(iso_string):
 
 def esc(text):
     """Escape text for safe HTML embedding -- news headlines/summaries
-    are external content, never trust them blindly when injecting into HTML."""
-    return html_lib.escape(text or "")
+    are external content, never trust them blindly when injecting into HTML.
+
+    We unescape first because some RSS sources (and occasionally the AI's
+    summary) already contain HTML entities like '&amp;' -- without this,
+    we'd double-encode it into '&amp;amp;', which renders literally as
+    "S&amp;P 500" instead of "S&P 500" on the page.
+    """
+    return html_lib.escape(html_lib.unescape(text or ""))
 
 
 def render_item(row):
