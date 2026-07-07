@@ -171,8 +171,8 @@ def build_messages(data):
     if data.get("degraded_mode"):
         messages.insert(0, (
             "Notice",
-            "⚠️ *Note: AI analysis was unavailable for this run -- "
-            "showing raw headlines without summaries/sectors.*"
+            "ℹ️ _Quick note: today's briefing shows raw headlines only "
+            "-- AI summarization hit a snag. Links below still work fine._"
         ))
 
     return messages
